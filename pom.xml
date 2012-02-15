@@ -21,6 +21,11 @@
 			<version>6.1.1</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.6.4</version>
+		</dependency>
 	</dependencies>
 	<description>Client API implementation for ge.tt (http://www.ge.tt) service.</description>
 	<organization>
@@ -59,6 +64,12 @@
 
 	<build>
 		<finalName>jgett</finalName>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -83,6 +94,7 @@
 				<configuration>
 					<doCheck>false</doCheck>
 					<doUpdate>false</doUpdate>
+					<revisionOnScmFailure>true</revisionOnScmFailure>
 				</configuration>
 				<executions>
 					<execution>
