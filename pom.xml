@@ -1,0 +1,38 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>it.atcetera</groupId>
+  <artifactId>jgett</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>jgett</name>
+  <url>https://bitbucket.org/torre/jgett</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+	<dependency>
+	  <groupId>org.testng</groupId>
+	  <artifactId>testng</artifactId>
+	  <version>6.1.1</version>
+	  <scope>test</scope>
+	</dependency>
+  </dependencies>
+  <description>Client API implementation for ge.tt (http://www.ge.tt) service.</description>
+  <organization>
+  	<name>Atcetera</name>
+  	<url>http://www.atcetera.it</url>
+  </organization>
+  <scm>
+  	<url>https://bitbucket.org/torre/jgett</url>
+  	<developerConnection>Gian Luca Dalla Torre &lt;g.dallatorre@atcetera.it&gt;</developerConnection>
+  </scm>
+
+  <build>
+	<finalName>jgett</finalName>
+  </build>
+</project>
