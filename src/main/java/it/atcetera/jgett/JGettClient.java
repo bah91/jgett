@@ -12,11 +12,6 @@ import java.util.Date;
 public class JGettClient {
 	
 	/**
-	 * API Key provided by Ge.tt to use its services
-	 */
-	private String apiKey;
-	
-	/**
 	 * Access token obtained after authentication
 	 */
 	private String accessToken;
@@ -30,6 +25,21 @@ public class JGettClient {
 	 * Expiration date for this access
 	 */
 	private Date expirationDate;
+	
+	/**
+	 * Authenticate a Ge.tt user into the Ge.tt system
+	 * 
+	 * @param apiKey A {@link String} that contains the unique Ge.tt API Key associated with the consumer app
+	 * @param eMail A {@link String} that contains the Ge.tt User E - Mail
+	 * @param password A {@link String} thtat contains the Ge.tt User password
+	 * @return An {@link UserInfo} object with the information of Ge.tt user
+	 */
+	public UserInfo authenticate(
+			String apiKey,
+			String eMail,
+			String password){
+		return null;
+	}
 	
 	/**
 	 * States if this client is authenticated against Ge.tt services

@@ -1,5 +1,7 @@
 package it.atcetera.jgett;
 
+import org.testng.Assert;
+import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 /**
@@ -12,11 +14,21 @@ import org.testng.annotations.Test;
 public class JGettClientTest {
 	
 	/**
-	 * Test for client authentication
+	 * Object that had to be tested
+	 */
+	private JGettClient client = new JGettClient();
+
+	/**
+	 * Test client authentication 
+	 * @param gettApiKey Ge.tt test API key
+	 * @param gettEmail Ge.tt test User e - mail
+	 * @param gettPassword Ge.tt test User password
 	 */
 	@Test
-	public void testAuthentication(){
-		
+	@Parameters({"gettApiKey", "gettEmail", "gettPassword"})
+	public void testAuthentication(String gettApiKey, String gettEmail, String gettPassword){
+		UserInfo user = client.authenticate(gettApiKey, gettEmail, gettPassword);
+		Assert.assertNotNull(user, "Something went wrong with authentication. The UserInfo data is missing!");
 	}
 
 }
