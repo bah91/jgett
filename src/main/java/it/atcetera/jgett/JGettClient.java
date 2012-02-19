@@ -125,7 +125,7 @@ public class JGettClient {
 	 */
 	private String makePostRequest(String url, String body) throws ClientProtocolException, IOException{
 		if (logger.isDebugEnabled()){
-			logger.debug("Make a POST call to URL [{}] and body [{}]", url, body);
+			logger.debug("Make a POST call to URL [{}]", url);
 		}
 		HttpClient c = this.getHttpClient();
 		HttpPost post = new HttpPost(url);
