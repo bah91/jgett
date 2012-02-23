@@ -2,9 +2,11 @@ package it.atcetera.jgett;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
@@ -12,11 +14,15 @@ import org.apache.commons.lang.builder.ToStringStyle;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.HttpVersion;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +60,11 @@ public class JGettClient {
 	private static final String GETT_LOGIN_URL = "/1/users/login";
 	
 	/**
+	 * Ge.tt API User information URL 
+	 */
+	private static final String GETT_ME_URL = "/1/users/me";
+	
+	/**
 	 * Access token obtained after authentication
 	 */
 	private String accessToken;
@@ -77,6 +88,34 @@ public class JGettClient {
 	 * Refresh token obtained after authentication
 	 */
 	private String refreshToken;
+	
+	/**
+	 * Check if a method that calls Ge.tt API could be invoked (i.e. user is authenticated and not exipred).<br>
+	 * If the authentication is expired, this method invoke the reauthentication mechanism
+	 * @return <code>true</code> if the invocation could be performed, <code>false</code> otherwise
+	 * @throws IOException In case of problem duting comunication with Ge.tt Services
+	 */
+	private boolean checkPreconditions() throws IOException{
+		if (!this.isAuthenticated()){
+			String message = "You must be authenticated on Ge.tt before using this method. Check \"authenticate\" method.";
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			return false;
+		}
+		try{
+			if (this.isExpired()){
+				this.reAuthenticateUser();
+			}
+		}catch(AuthenticationException ae){
+			if (logger.isErrorEnabled()){
+				logger.error("Unable to reauthenticate the current user. Check log for details.");
+			}
+			return false;
+		}
+		
+		return true;
+	}
 	
 	/**
 	 * Get an instance of a http client used to interact with Ge.tt API.<br>
@@ -115,6 +154,49 @@ public class JGettClient {
 	}
 	
 	/**
+	 * Make a GET HTTP 1.1 request to an HTTP Server
+	 * 
+	 * @param url A {@link String} containing the URL where to post data
+	 * @param params A {@link Map} of name - value parameters that will be encoded into the post string as GET parameters. 
+	 * It can be <code>null</code> if no parameters are necessary
+	 * @return A {@link String} containing the response body or <code>null</code> if HTTP response != 200
+	 * @throws ClientProtocolException When there is a protocol mismatch on HTTP
+	 * @throws IOException In case of generic error
+	 */
+	private String makeGetRequest(String url, Map<String, String> params) throws ClientProtocolException, IOException{
+		HttpClient c = this.getHttpClient();
+		if (params != null){
+			url = url + this.toQueryString(params);
+		}
+		HttpGet get = new HttpGet(url);
+		if (logger.isDebugEnabled()){
+			logger.debug("Make a GET call to URL [{}]", url);
+		}
+
+		HttpResponse response = c.execute(get);
+		if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK){
+			String message = MessageFormat.format("Unable to obtain the result from URL [{0}]. The server response with status code [{1}]", 
+					url,  
+					response.getStatusLine().getStatusCode());
+			if (logger.isWarnEnabled()){
+				logger.warn(message);
+			}
+			// Deallocate connection
+			EntityUtils.consume(response.getEntity());
+			return null;
+		}
+		String responseBody = EntityUtils.toString(response.getEntity());
+		if (logger.isDebugEnabled()){
+			logger.debug("Obtained response body: [{}]", responseBody);
+		}
+		
+		// Deallocate connection
+		EntityUtils.consume(response.getEntity());
+
+		return responseBody;
+	}	
+	
+	/**
 	 * Make a POST HTTP 1.1 request to an HTTP Server
 	 * 
 	 * @param url A {@link String} containing the URL where to post data
@@ -124,11 +206,28 @@ public class JGettClient {
 	 * @throws IOException In case of generic error
 	 */
 	private String makePostRequest(String url, String body) throws ClientProtocolException, IOException{
+		return this.makePostRequest(url, body, null);
+	}
+	/**
+	 * Make a POST HTTP 1.1 request to an HTTP Server
+	 * 
+	 * @param url A {@link String} containing the URL where to post data
+	 * @param body A {@link String} containing the body to post
+	 * @param params A {@link Map} of name - value parameters that will be encoded into the post string as GET parameters (as Ge.tt required this strange behavior). 
+	 * It can be <code>null</code> if no parameters are necessary
+	 * @return A {@link String} containing the response body or <code>null</code> if HTTP response != 200
+	 * @throws ClientProtocolException When there is a protocol mismatch on HTTP
+	 * @throws IOException In case of generic error
+	 */
+	private String makePostRequest(String url, String body, Map<String, String> params) throws ClientProtocolException, IOException{
+		HttpClient c = this.getHttpClient();
+		if (params != null){
+			url = url + this.toQueryString(params);
+		}
+		HttpPost post = new HttpPost(url);
 		if (logger.isDebugEnabled()){
 			logger.debug("Make a POST call to URL [{}]", url);
 		}
-		HttpClient c = this.getHttpClient();
-		HttpPost post = new HttpPost(url);
 		StringEntity se = new StringEntity(body, "application/json", "utf-8");
 		post.setEntity(se);
 		HttpResponse response = c.execute(post);
@@ -140,6 +239,8 @@ public class JGettClient {
 			if (logger.isWarnEnabled()){
 				logger.warn(message);
 			}
+			// Deallocate connection
+			EntityUtils.consume(response.getEntity());
 			return null;
 		}
 		String responseBody = EntityUtils.toString(response.getEntity());
@@ -147,9 +248,65 @@ public class JGettClient {
 			logger.debug("Obtained response body: [{}]", responseBody);
 		}
 		
+		// Deallocate connection
+		EntityUtils.consume(response.getEntity());
+		
 		return responseBody;
 	}
 	
+	private UserInfo reAuthenticateUser() throws IOException, AuthenticationException{
+		if (!this.isAuthenticated()){
+			String message = "Unable to reauth a user that is not yet authenticated.";
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IllegalAccessError(message);
+		}
+		if (logger.isDebugEnabled()){
+			logger.debug("Reauthenticating user with refresh token [{}]", this.refreshToken);
+		}
+		String loginURL = JGettClient.GETT_BASE_URL + JGettClient.GETT_LOGIN_URL;
+		HashMap<String, String> parameters = new HashMap<String, String>();
+		parameters.put("refreshtoken", this.refreshToken);
+		
+		// JSON data used into the request body
+		String request = this.gson.toJson(parameters);
+		String body = this.makePostRequest(loginURL, request);
+		if (body == null){
+			throw new AuthenticationException(MessageFormat.format(
+					"Unable to authenticate user with refresh token [{0}].", 
+					this.refreshToken)
+				);
+		}
+		
+		AuthenticationResponse ar = this.gson.fromJson(body, AuthenticationResponse.class);
+		// Save tokens into the client
+		this.accessToken = ar.getAccessToken();
+		this.refreshToken = ar.getRefreshToken();
+		// Set the expiration date
+		Calendar c = Calendar.getInstance();
+		c.add(Calendar.SECOND, (new Long(ar.getExpires()).intValue()));
+		this.expirationDate = c.getTime();
+		if (logger.isDebugEnabled()){
+			logger.debug("Authentication expiration date: [{}]", this.expirationDate);
+			logger.debug("Authentication succeded for user [{}]", ar.getUser().getFullName());
+		}
+		return ar.getUser();
+
+	}
+	
+	/**
+	 * Convert a {@link Map} of parameters into a standard Query String
+	 * @param params A {@link Map} of name value parameters needed to be converted
+	 * @return A {@link String} that contains the correctly encoded params
+	 */
+	private String toQueryString(Map<String, String> params){
+		ArrayList<NameValuePair> p = new ArrayList<NameValuePair>();
+		for (Map.Entry<String, String> entry : params.entrySet()){
+			p.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+		}
+		return "?" + URLEncodedUtils.format(p, "utf-8");
+	}
 	
 	/**
 	 * Authenticate a Ge.tt user into the Ge.tt system
@@ -205,6 +362,29 @@ public class JGettClient {
 			logger.debug("Authentication succeded for user [{}]", ar.getUser().getFullName());
 		}
 		return ar.getUser();
+	}
+	
+	/**
+	 * Retrieve Current Ge.tt logged in user information
+	 * @return A {@link UserInfo} implementation containing the data of the current logged in user
+	 * @throws IOException 
+	 */
+	public UserInfo getUserInformation() throws IOException{
+		if (!this.checkPreconditions()){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
+		}
+		String meUrl = JGettClient.GETT_BASE_URL + JGettClient.GETT_ME_URL;
+		HashMap<String, String> parameters = new HashMap<String, String>();
+		parameters.put("accesstoken", this.accessToken);
+		String body = this.makeGetRequest(meUrl, parameters);
+		if (body == null){
+			String message = MessageFormat.format("Unable to retrieve user information using access token [{0}].", this.accessToken);
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IOException(message);
+		}
+		return this.gson.fromJson(body, UserInfoImpl.class);
 	}
 	
 	/**

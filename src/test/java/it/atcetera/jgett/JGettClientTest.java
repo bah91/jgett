@@ -54,4 +54,14 @@ public class JGettClientTest {
 			Assert.fail("Something went wrong with authentication. Exception had been thrown");
 		}
 	}
+	
+	@Test(dependsOnGroups = { "auth" })
+	public void testUserInfoRetrieval(){
+		try{
+			UserInfo user = client.getUserInformation();
+			Assert.assertNotNull(user, "Something went wrong with authentication. The UserInfo data is missing!");
+		}catch(Exception e){
+			Assert.fail("Unable to retrieve user info from an authenticated user", e);
+		}
+	}
 }
