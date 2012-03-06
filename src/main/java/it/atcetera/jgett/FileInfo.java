@@ -32,9 +32,9 @@ public interface FileInfo {
 	
 	/**
 	 * The Ge.tt share which this file belong to
-	 * @return A {@link String} with the name of the Ge.tt share which this file belong to
+	 * @return A {@link ShareInfo} instance with the Ge.tt share which this file belong to
 	 */
-	public String getShareName();
+	public ShareInfo getShare();
 	
 	/**
 	 * Upload status of this file

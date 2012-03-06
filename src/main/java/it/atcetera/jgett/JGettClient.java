@@ -1,6 +1,7 @@
 package it.atcetera.jgett;
 
 import java.io.IOException;
+import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -685,5 +686,168 @@ class UserInfoImpl implements UserInfo{
 	 * Default constructor
 	 */
 	public UserInfoImpl() {}
+	
+}
+
+/**
+ * Class used to implement {@link FileInfo} interface
+ * 
+ * @author Gian Luca Dalla Torre <g.dallatorre@atcetera.it>
+ * @version $Id$
+ *
+ */
+class FileInfoImpl implements FileInfo{
+	
+	/**
+	 * The name of the file
+	 */
+	private String fileName;
+	
+	/**
+	 * File Unique identifier
+	 */
+	private String fileId;
+	
+	/**
+	 * Download URL for this file
+	 */
+	private URL url;
+	
+	/**
+	 * Upload URL for this file
+	 */
+	private URL uploadUrl;
+	
+	/**
+	 * How many times this file has been downloaded
+	 */
+	private int numberOfDownloads;
+	
+	/**
+	 * Status of this file
+	 */
+	private ReadyState readyState;
+	
+	/**
+	 * Date when this file has been created
+	 */
+	private Date creationDate;
+	
+	/**
+	 * Share which this file belong to
+	 */
+	private ShareInfo share;
+
+	@Override
+	public String getFileName() {
+		return this.fileName;
+	}
+
+	@Override
+	public String getFileId() {
+		return this.fileId;
+	}
+
+	@Override
+	public int getNumberOfDownloads() {
+		return this.numberOfDownloads;
+	}
+
+	@Override
+	public ShareInfo getShare(){
+		return this.share;
+	}
+
+	@Override
+	public ReadyState getReadyState() {
+		return this.readyState;
+	}
+
+	@Override
+	public Date getCreationDate() {
+		return this.creationDate;
+	}
+
+	@Override
+	public URL getUrl() {
+		return this.url;
+	}
+
+	/**
+	 * Return the URL used to upload this file using PUT request
+	 * @return An {@link URL} that contains the Ge.tt upload URL for this file
+	 */
+	public URL getUploadUrl() {
+		return uploadUrl;
+	}
+
+	/**
+	 * Set the file name
+	 * @param fileName A {@link String} with the file name
+	 */
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	/**
+	 * Set the File Unique identifier
+	 * @param fileId A {@link String} that contains the File unique identifier
+	 */
+	public void setFileId(String fileId) {
+		this.fileId = fileId;
+	}
+
+	/**
+	 * Set the URL where this file can be downloaded
+	 * @param url An {@link URL} that contains the download link for this file
+	 */
+	public void setUrl(URL url) {
+		this.url = url;
+	}
+
+	/**
+	 * Set the URL where this file can be uploaded into Ge.tt system thru PUT request
+	 * @param uploadUrl An {@link URL} where this file can be uploaded thru PUT
+	 */
+	public void setUploadUrl(URL uploadUrl) {
+		this.uploadUrl = uploadUrl;
+	}
+
+	/**
+	 * Set the number of download of this file
+	 * @param numberOfDownloads An int that represents the number of download of this file
+	 */
+	public void setNumberOfDownloads(int numberOfDownloads) {
+		this.numberOfDownloads = numberOfDownloads;
+	}
+
+	/**
+	 * Set the upload status of this file
+	 * @param readyState A {@link ReadyState} instance that represent the upload status of this file
+	 */
+	public void setReadyState(ReadyState readyState) {
+		this.readyState = readyState;
+	}
+
+	/**
+	 * Set the creation date of this file
+	 * @param creationDate A {@link Date} that represents the creation date of this file
+	 */
+	public void setCreationDate(Date creationDate) {
+		this.creationDate = creationDate;
+	}
+
+	/**
+	 * Set the {@link ShareInfo} which this file belongs to
+	 * @param share A {@link ShareInfo} instance that indicate the share whic this file belongs to
+	 */
+	public void setShare(ShareInfo share) {
+		this.share = share;
+	}
+
+	@Override
+	public String toString() {
+		return ReflectionToStringBuilder.toString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+	}
 	
 }
