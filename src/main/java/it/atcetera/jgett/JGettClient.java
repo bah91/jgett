@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -736,7 +737,7 @@ class FileInfoImpl implements FileInfo{
 	/**
 	 * Share which this file belong to
 	 */
-	private ShareInfo share;
+	private ShareInfoImpl share;
 
 	@Override
 	public String getFileName() {
@@ -838,10 +839,10 @@ class FileInfoImpl implements FileInfo{
 	}
 
 	/**
-	 * Set the {@link ShareInfo} which this file belongs to
-	 * @param share A {@link ShareInfo} instance that indicate the share whic this file belongs to
+	 * Set the {@link ShareInfoImpl} which this file belongs to
+	 * @param share A {@link ShareInfoImpl} instance that states the share which this file belongs to
 	 */
-	public void setShare(ShareInfo share) {
+	public void setShare(ShareInfoImpl share) {
 		this.share = share;
 	}
 
@@ -850,4 +851,84 @@ class FileInfoImpl implements FileInfo{
 		return ReflectionToStringBuilder.toString(this, ToStringStyle.SHORT_PREFIX_STYLE);
 	}
 	
+}
+
+class ShareInfoImpl implements ShareInfo{
+	
+	/**
+	 * The name of this share
+	 */
+	private String shareName;
+	
+	/**
+	 * The title of this share
+	 */
+	private String title;
+	
+	/**
+	 * The date when this share has been created
+	 */
+	private Date creationDate;
+	
+	/**
+	 * List of files that belongs to this share
+	 */
+	private List<FileInfo> files;
+
+	@Override
+	public String getShareName() {
+		return this.shareName;
+	}
+
+	@Override
+	public String getTitle() {
+		return this.title;
+	}
+
+	@Override
+	public Date getCreationDate() {
+		return this.creationDate;
+	}
+
+	@Override
+	public List<FileInfo> getFiles() {
+		return this.files;
+	}
+
+	/**
+	 * Set the name of this share
+	 * @param shareName A {@link String} that contains the share name
+	 */
+	public void setShareName(String shareName) {
+		this.shareName = shareName;
+	}
+
+	/**
+	 * Set the title of this share
+	 * @param title A {@link String} that contains the share title
+	 */
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	/**
+	 * Set the creation date of this share
+	 * @param creationDate A {@link Date} that contains the creation date
+	 */
+	public void setCreationDate(Date creationDate) {
+		this.creationDate = creationDate;
+	}
+
+	/**
+	 * Set the files that belogns to this share
+	 * @param files A {@link List} of {@link FileInfo} that contains the files that belongs to this share
+	 */
+	public void setFiles(List<FileInfo> files) {
+		this.files = files;
+	}
+
+	@Override
+	public String toString() {
+		return ReflectionToStringBuilder.toString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+	}
 }
