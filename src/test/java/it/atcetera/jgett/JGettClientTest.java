@@ -55,6 +55,9 @@ public class JGettClientTest {
 		}
 	}
 	
+	/**
+	 * Test the retrieval of Ge.tt user information
+	 */
 	@Test(dependsOnGroups = { "auth" })
 	public void testUserInfoRetrieval(){
 		try{
@@ -62,6 +65,20 @@ public class JGettClientTest {
 			Assert.assertNotNull(user, "Something went wrong with authentication. The UserInfo data is missing!");
 		}catch(Exception e){
 			Assert.fail("Unable to retrieve user info from an authenticated user", e);
+		}
+	}
+	
+	/**
+	 * Test the creation of a Ge.tt Share
+	 */
+	@Test(dependsOnGroups = { "auth" })
+	public void testCreateShare(){
+		try{
+			ShareInfo si = client.createShare("The Test");
+			Assert.assertEquals(si.getTitle(), "The Test", "Something went wrong with share creation. The share title is mismatching!");
+			System.out.println(si);
+		}catch(Exception e){
+			Assert.fail("Unable to create a new Ge.tt share", e);
 		}
 	}
 }

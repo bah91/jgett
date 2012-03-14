@@ -1,6 +1,7 @@
 package it.atcetera.jgett;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -30,6 +31,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -67,6 +76,11 @@ public class JGettClient {
 	private static final String GETT_ME_URL = "/1/users/me";
 	
 	/**
+	 * Ge.tt API Create share URL 
+	 */
+	private static final String GETT_CREATE_SHARE_URL = "/1/shares/create";
+
+	/**
 	 * Access token obtained after authentication
 	 */
 	private String accessToken;
@@ -79,7 +93,7 @@ public class JGettClient {
 	/**
 	 * Java to JSON mapper
 	 */
-	private Gson gson = new Gson();
+	private Gson gson = null;
 	
 	/**
 	 * Http client used to interact with Ge.tt API
@@ -153,6 +167,41 @@ public class JGettClient {
 			}
 		}
 		return this.httpClient;
+	}
+	
+	/**
+	 * Initialize a {@link Gson} instance injecting custom serializer and deserializer used by Ge.tt API
+	 * @return a {@link Gson} instance used to serialize and deserialize JSON to classes
+	 */
+	private Gson initializeGson(){
+		GsonBuilder gsonBuilder = new GsonBuilder();
+		// A custom Date Serializer - Deserializer that follows Ge.tt specification
+		class GettDateSerializerDeserializer implements JsonDeserializer<Date>, JsonSerializer<Date>{
+
+			@Override
+			public JsonElement serialize(Date src, Type typeOfSrc,
+					JsonSerializationContext context) {
+				return src == null ? null : new JsonPrimitive((src.getTime() / 1000l));
+			}
+
+			@Override
+			public Date deserialize(JsonElement json, Type typeOfT,
+					JsonDeserializationContext context)
+					throws JsonParseException {
+				if (json != null){
+					Date d = new Date();
+					d.setTime(json.getAsLong() * 1000l);
+					return d;
+				}else{
+					return null;
+				}
+			}
+			
+		}
+		
+		// Registering custom serializer - deserializer
+		gsonBuilder.registerTypeAdapter(Date.class, new GettDateSerializerDeserializer());
+		return gsonBuilder.create();
 	}
 	
 	/**
@@ -367,6 +416,37 @@ public class JGettClient {
 	}
 	
 	/**
+	 * Create a Ge.tt share owned that can contains files to share
+	 * 
+	 * @param title A {@link String} that contains the Ge.tt share title, it can be <code>null</code>
+	 * @return A {@link ShareInfo} implementation that contains the information about this share
+	 * @throws IOException In case of generic IO Error on HTTP communication
+	 */
+	public ShareInfo createShare(String title) throws IOException{
+		if (!this.checkPreconditions()){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
+		}		
+		String createShareUrl = JGettClient.GETT_BASE_URL + JGettClient.GETT_CREATE_SHARE_URL;
+		HashMap<String, String> parameters = new HashMap<String, String>();
+		parameters.put("accesstoken", this.accessToken);
+		String body = "";
+		if (title != null){
+			HashMap<String, String> bodyMap = new HashMap<String, String>();
+			bodyMap.put("title", title);
+			body = this.gson.toJson(bodyMap);
+		}
+		String response = this.makePostRequest(createShareUrl, body, parameters);
+		if (response == null){
+			String message = MessageFormat.format("Unable to retrieve share information using access token [{0}].", this.accessToken);
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IOException(message);
+		}
+		return this.gson.fromJson(response, ShareInfoImpl.class);
+	}
+	
+	/**
 	 * Retrieve Current Ge.tt logged in user information
 	 * @return A {@link UserInfo} implementation containing the data of the current logged in user
 	 * @throws IOException 
@@ -412,6 +492,13 @@ public class JGettClient {
 		
 		Date now = new Date();
 		return now.after(this.expirationDate);
+	}
+	
+	/**
+	 * Initialize the Ge.tt client
+	 */
+	public JGettClient(){
+		this.gson = this.initializeGson();
 	}
 
 }
@@ -858,22 +945,26 @@ class ShareInfoImpl implements ShareInfo{
 	/**
 	 * The name of this share
 	 */
+	@SerializedName("sharename")
 	private String shareName;
 	
 	/**
 	 * The title of this share
 	 */
+	@SerializedName("title")
 	private String title;
 	
 	/**
 	 * The date when this share has been created
 	 */
+	@SerializedName("created")
 	private Date creationDate;
 	
 	/**
 	 * List of files that belongs to this share
 	 */
-	private List<FileInfo> files;
+	@SerializedName("files")
+	private List<FileInfoImpl> files;
 
 	@Override
 	public String getShareName() {
@@ -892,7 +983,11 @@ class ShareInfoImpl implements ShareInfo{
 
 	@Override
 	public List<FileInfo> getFiles() {
-		return this.files;
+		ArrayList<FileInfo> result = new ArrayList<FileInfo>();
+		for(FileInfoImpl fi: this.files){
+			result.add(fi);
+		}
+		return result;
 	}
 
 	/**
@@ -923,7 +1018,7 @@ class ShareInfoImpl implements ShareInfo{
 	 * Set the files that belogns to this share
 	 * @param files A {@link List} of {@link FileInfo} that contains the files that belongs to this share
 	 */
-	public void setFiles(List<FileInfo> files) {
+	public void setFiles(List<FileInfoImpl> files) {
 		this.files = files;
 	}
 
