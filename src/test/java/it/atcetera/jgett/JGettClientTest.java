@@ -1,6 +1,7 @@
 package it.atcetera.jgett;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.testng.Assert;
 import org.testng.annotations.Parameters;
@@ -71,14 +72,27 @@ public class JGettClientTest {
 	/**
 	 * Test the creation of a Ge.tt Share
 	 */
-	@Test(dependsOnGroups = { "auth" })
+	@Test(dependsOnGroups = { "auth" }, groups = { "createShare" })
 	public void testCreateShare(){
 		try{
 			ShareInfo si = client.createShare("The Test");
 			Assert.assertEquals(si.getTitle(), "The Test", "Something went wrong with share creation. The share title is mismatching!");
-			System.out.println(si);
 		}catch(Exception e){
 			Assert.fail("Unable to create a new Ge.tt share", e);
+		}
+	}
+	
+	/**
+	 * Test the Ge.tt share global retrieval
+	 */
+	@Test(dependsOnGroups = { "createShare" })
+	public void testgetShares(){
+		try{
+			List<ShareInfo> si = client.getShares();
+			Assert.assertNotEquals(si.size(), 0, "Something went wrong with share listing. No shares has been found!");
+			System.out.println(si);
+		}catch(Exception e){
+			Assert.fail("Unable to get Ge.tt shares", e);
 		}
 	}
 }

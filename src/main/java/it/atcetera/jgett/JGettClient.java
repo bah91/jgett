@@ -40,6 +40,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * Client used to interact with <a href="http://www.ge.tt" target="_blank">Ge.tt</a> services thru REST API
@@ -79,6 +80,11 @@ public class JGettClient {
 	 * Ge.tt API Create share URL 
 	 */
 	private static final String GETT_CREATE_SHARE_URL = "/1/shares/create";
+
+	/**
+	 * Ge.tt API List share URL 
+	 */
+	private static final String GETT_LIST_SHARE_URL = "/1/shares";
 
 	/**
 	 * Access token obtained after authentication
@@ -416,7 +422,7 @@ public class JGettClient {
 	}
 	
 	/**
-	 * Create a Ge.tt share owned that can contains files to share
+	 * Create a Ge.tt share owned by the current user that can contains files to share
 	 * 
 	 * @param title A {@link String} that contains the Ge.tt share title, it can be <code>null</code>
 	 * @return A {@link ShareInfo} implementation that contains the information about this share
@@ -446,8 +452,30 @@ public class JGettClient {
 		return this.gson.fromJson(response, ShareInfoImpl.class);
 	}
 	
-	public List<? extends ShareInfo> getShares(){
-		return null;
+	/**
+	 * Get all the Ge.tt Shares associated with the current user (and its relative files)
+	 * 
+	 * @return A {@link List} of {@link ShareInfo} implementation that contains all the shares owned by the current user
+	 * @throws IOException In case of generic IO Error on HTTP communication
+	 */
+	public List<ShareInfo> getShares() throws IOException{
+		if (!this.checkPreconditions()){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
+		}
+		String shareListUrl = JGettClient.GETT_BASE_URL + JGettClient.GETT_LIST_SHARE_URL;
+		HashMap<String, String> parameters = new HashMap<String, String>();
+		parameters.put("accesstoken", this.accessToken);
+		String body = this.makeGetRequest(shareListUrl, parameters);
+		if (body == null){
+			String message = MessageFormat.format("Unable to retrieve share list using access token [{0}].", this.accessToken);
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IOException(message);
+		}
+		
+		Type shareCollectionType = new TypeToken<List<ShareInfoImpl>>(){}.getType();
+		return this.gson.fromJson(body, shareCollectionType);
 	}
 	
 	/**
