@@ -446,6 +446,10 @@ public class JGettClient {
 		return this.gson.fromJson(response, ShareInfoImpl.class);
 	}
 	
+	public List<? extends ShareInfo> getShares(){
+		return null;
+	}
+	
 	/**
 	 * Retrieve Current Ge.tt logged in user information
 	 * @return A {@link UserInfo} implementation containing the data of the current logged in user
@@ -964,7 +968,7 @@ class ShareInfoImpl implements ShareInfo{
 	 * List of files that belongs to this share
 	 */
 	@SerializedName("files")
-	private List<FileInfoImpl> files;
+	private List<? extends FileInfo> files;
 	
 	/**
 	 * Ge.tt URL of this share
@@ -988,12 +992,9 @@ class ShareInfoImpl implements ShareInfo{
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public List<FileInfo> getFiles() {
-		ArrayList<FileInfo> result = new ArrayList<FileInfo>();
-		for(FileInfoImpl fi: this.files){
-			result.add(fi);
-		}
-		return result;
+		return (List<FileInfo>) this.files;
 	}
 
 	/**
