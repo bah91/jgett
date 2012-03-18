@@ -3,6 +3,7 @@ package it.atcetera.jgett;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -450,6 +451,36 @@ public class JGettClient {
 			throw new IOException(message);
 		}
 		return this.gson.fromJson(response, ShareInfoImpl.class);
+	}
+	
+	/**
+	 * Get a Ge.tt Share associated with the current user (and its relative files)
+	 * 
+	 * @param shareName A {@link String} containig the name of the share to retrieve
+	 * @return A {@link ShareInfo} instance containing the required Ge.tt share or <code>null</code> if the share could not be find
+	 * @throws IOException In case of generic IO Error on HTTP communication
+	 */
+	public ShareInfo getShare(String shareName) throws IOException{
+		if (!this.checkPreconditions()){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
+		}
+		if (shareName == null){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. The name of the share must be defined.");
+		}
+		StringBuilder shareUrl = new StringBuilder();
+		shareUrl.append(JGettClient.GETT_BASE_URL);
+		shareUrl.append(JGettClient.GETT_LIST_SHARE_URL);
+		shareUrl.append("/");
+		shareUrl.append(URLEncoder.encode(shareName, "utf-8"));
+		
+		HashMap<String, String> parameters = new HashMap<String, String>();
+		String body = this.makeGetRequest(shareUrl.toString(), parameters);
+		if (body == null){
+			// The Ge.tt share requested does not exists
+			return null;
+		}
+		
+		return this.gson.fromJson(body, ShareInfoImpl.class);
 	}
 	
 	/**

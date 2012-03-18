@@ -72,27 +72,43 @@ public class JGettClientTest {
 	/**
 	 * Test the creation of a Ge.tt Share
 	 */
-	@Test(dependsOnGroups = { "auth" }, groups = { "createShare" })
-	public void testCreateShare(){
+	@Test(dependsOnGroups = { "auth" }, groups = { "share" })
+	public void testShares(){
+		ShareInfo si = null;
 		try{
-			ShareInfo si = client.createShare("The Test");
+			si = client.createShare("The Test");
 			Assert.assertEquals(si.getTitle(), "The Test", "Something went wrong with share creation. The share title is mismatching!");
 		}catch(Exception e){
 			Assert.fail("Unable to create a new Ge.tt share", e);
+			return;
+		}
+		
+		// Next retrieve all the Shares
+		try{
+			List<ShareInfo> shareList = client.getShares();
+			Assert.assertNotEquals(shareList.size(), 0, "Ge.tt Share number mismatch while retrieving all shares");
+		}catch(Exception e){
+			Assert.fail("Unable to retrieve all Ge.tt shares associated to an user", e);
+			return;
+		}
+		
+		// Retrieve a single share
+		try{
+			ShareInfo ssi = client.getShare(si.getShareName());
+			Assert.assertEquals(ssi.getTitle(), "The Test", "Something went wrong with share retrieval. The share title is mismatching!");
+		}catch(Exception e){
+			Assert.fail("Unable to retrieve a Ge.tt share associated to an user", e);
+			return;
+		}
+		
+		// Retrieve a wrong single share
+		try{
+			ShareInfo ssi = client.getShare("ndknvdlvnd");
+			Assert.assertNull(ssi, "Retrieved an invalid Ge.tt share!");
+		}catch(Exception e){
+			Assert.fail("Unable to retrieve a wrong Ge.tt share associated to an user", e);
+			return;
 		}
 	}
 	
-	/**
-	 * Test the Ge.tt share global retrieval
-	 */
-	@Test(dependsOnGroups = { "createShare" })
-	public void testgetShares(){
-		try{
-			List<ShareInfo> si = client.getShares();
-			Assert.assertNotEquals(si.size(), 0, "Something went wrong with share listing. No shares has been found!");
-			System.out.println(si);
-		}catch(Exception e){
-			Assert.fail("Unable to get Ge.tt shares", e);
-		}
-	}
 }
