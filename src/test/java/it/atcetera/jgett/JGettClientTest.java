@@ -103,11 +103,12 @@ public class JGettClientTest {
 		
 		// Retrieve a wrong single share
 		try{
-			ShareInfo ssi = client.getShare("ndknvdlvnd");
-			Assert.assertNull(ssi, "Retrieved an invalid Ge.tt share!");
-		}catch(Exception e){
+			client.getShare("ndknvdlvnd");
+		}catch(IOException e){
 			Assert.fail("Unable to retrieve a wrong Ge.tt share associated to an user", e);
 			return;
+		}catch(ShareNotFoundException e){
+			// This is ok, since the share does not exists
 		}
 	}
 	

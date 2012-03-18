@@ -453,14 +453,18 @@ public class JGettClient {
 		return this.gson.fromJson(response, ShareInfoImpl.class);
 	}
 	
+	public void destroyShare(String shareName) throws IOException{
+		
+	}
+	
 	/**
 	 * Get a Ge.tt Share associated with the current user (and its relative files)
 	 * 
-	 * @param shareName A {@link String} containig the name of the share to retrieve
-	 * @return A {@link ShareInfo} instance containing the required Ge.tt share or <code>null</code> if the share could not be find
+	 * @param shareName A {@link String} containing the name of the share to retrieve
+	 * @return A {@link ShareInfo} instance containing the required Ge.tt share
 	 * @throws IOException In case of generic IO Error on HTTP communication
 	 */
-	public ShareInfo getShare(String shareName) throws IOException{
+	public ShareInfo getShare(String shareName) throws IOException, ShareNotFoundException{
 		if (!this.checkPreconditions()){
 			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
 		}
@@ -476,8 +480,7 @@ public class JGettClient {
 		HashMap<String, String> parameters = new HashMap<String, String>();
 		String body = this.makeGetRequest(shareUrl.toString(), parameters);
 		if (body == null){
-			// The Ge.tt share requested does not exists
-			return null;
+			throw new ShareNotFoundException(MessageFormat.format("The Ge.tt share identified by [{0}] was not found", shareName));
 		}
 		
 		return this.gson.fromJson(body, ShareInfoImpl.class);
