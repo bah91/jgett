@@ -1,5 +1,6 @@
 package it.atcetera.jgett;
 
+import java.net.URL;
 import java.util.Date;
 import java.util.List;
 
@@ -35,5 +36,11 @@ public interface ShareInfo {
 	 * @return A {@link List} of {@link FileInfo} objects that states the files belonging to this share
 	 */
 	public List<FileInfo> getFiles();
+	
+	/**
+	 * Where to find info about this Share on Ge.tt
+	 * @return An {@link URL} that contains the Ge.tt service URI where this share is available
+	 */
+	public URL getUrl();	
 
 }

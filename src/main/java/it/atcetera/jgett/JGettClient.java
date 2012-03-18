@@ -965,6 +965,12 @@ class ShareInfoImpl implements ShareInfo{
 	 */
 	@SerializedName("files")
 	private List<FileInfoImpl> files;
+	
+	/**
+	 * Ge.tt URL of this share
+	 */
+	@SerializedName("getturl")
+	private URL url;
 
 	@Override
 	public String getShareName() {
@@ -1020,6 +1026,19 @@ class ShareInfoImpl implements ShareInfo{
 	 */
 	public void setFiles(List<FileInfoImpl> files) {
 		this.files = files;
+	}
+	
+	@Override
+	public URL getUrl() {
+		return url;
+	}
+
+	/**
+	 * Set the Ge.tt Share URL 
+	 * @param url An {@link URL} containing the endpoint for this Ge.tt Share
+	 */
+	public void setUrl(URL url) {
+		this.url = url;
 	}
 
 	@Override
