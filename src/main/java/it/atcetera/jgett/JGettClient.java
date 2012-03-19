@@ -86,6 +86,11 @@ public class JGettClient {
 	 * Ge.tt API List share URL 
 	 */
 	private static final String GETT_LIST_SHARE_URL = "/1/shares";
+	
+	/**
+	 * Ge.tt API Destroy share URL
+	 */
+	private static final String GETT_DESTROY_SHARE_URL = "/1/shares/{sharename}/destroy";
 
 	/**
 	 * Access token obtained after authentication
@@ -206,8 +211,36 @@ public class JGettClient {
 			
 		}
 		
+		// A custom Serializer - Deserializer that maps a ready state to the correct enum
+		class GettReadyStateSerializerDeserializer implements JsonDeserializer<ReadyState>, JsonSerializer<ReadyState>{
+
+			@Override
+			public JsonElement serialize(ReadyState src, Type typeOfSrc,
+					JsonSerializationContext context) {
+				return src == null ? null : new JsonPrimitive(src.getValue());
+			}
+
+			@Override
+			public ReadyState deserialize(JsonElement json, Type typeOfT,
+					JsonDeserializationContext context)
+					throws JsonParseException {
+				if (json != null){
+					for (ReadyState rs: ReadyState.values()){
+						if (rs.getValue().equalsIgnoreCase(json.getAsString())){
+							return rs;
+						}
+					}
+					return null;
+				}else{
+					return null;
+				}
+			}
+			
+		}
+		
 		// Registering custom serializer - deserializer
 		gsonBuilder.registerTypeAdapter(Date.class, new GettDateSerializerDeserializer());
+		gsonBuilder.registerTypeAdapter(ReadyState.class, new GettReadyStateSerializerDeserializer());
 		return gsonBuilder.create();
 	}
 	
@@ -453,7 +486,35 @@ public class JGettClient {
 		return this.gson.fromJson(response, ShareInfoImpl.class);
 	}
 	
-	public void destroyShare(String shareName) throws IOException{
+	/**
+	 * Destroy a Ge.tt Share owned by this user (and its relative files)
+	 * 
+	 * @param shareName A {@link String} that contains the share name that had to be destroyed
+	 * @throws IOException In case of generic IO Error on HTTP communication
+	 * @throws ShareNotFoundException If the share does not exists into Ge.tt system
+	 */
+	public void destroyShare(String shareName) throws IOException, ShareNotFoundException{
+		if (!this.checkPreconditions()){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
+		}
+		if (shareName == null){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. The name of the share must be defined.");
+		}
+		// Check if this share exists
+		this.getShare(shareName);
+
+		String destroyShareURL = JGettClient.GETT_BASE_URL + JGettClient.GETT_DESTROY_SHARE_URL.replace("{sharename}", shareName);
+		HashMap<String, String> parameters = new HashMap<String, String>();
+		parameters.put("accesstoken", this.accessToken);
+		String body = "";
+		String response = this.makePostRequest(destroyShareURL, body, parameters);
+		if (response == null){
+			String message = MessageFormat.format("Unable to retrieve share destroy confirmation using access token [{0}].", this.accessToken);
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IOException(message);
+		}
 		
 	}
 	
@@ -463,6 +524,7 @@ public class JGettClient {
 	 * @param shareName A {@link String} containing the name of the share to retrieve
 	 * @return A {@link ShareInfo} instance containing the required Ge.tt share
 	 * @throws IOException In case of generic IO Error on HTTP communication
+	 * @throws ShareNotFoundException If the share does not exists into Ge.tt system
 	 */
 	public ShareInfo getShare(String shareName) throws IOException, ShareNotFoundException{
 		if (!this.checkPreconditions()){
@@ -1032,6 +1094,9 @@ class ShareInfoImpl implements ShareInfo{
 	@SerializedName("files")
 	private List<? extends FileInfo> files;
 	
+	@SerializedName("readystate")
+	private ReadyState readyState;
+	
 	/**
 	 * Ge.tt URL of this share
 	 */
@@ -1102,6 +1167,19 @@ class ShareInfoImpl implements ShareInfo{
 	 */
 	public void setUrl(URL url) {
 		this.url = url;
+	}
+	
+	@Override
+	public ReadyState getReadyState() {
+		return readyState;
+	}
+
+	/**
+	 * Set the status of this share
+	 * @param readyState A {@link ReadyState} enum that states the status of this share
+	 */
+	public void setReadyState(ReadyState readyState) {
+		this.readyState = readyState;
 	}
 
 	@Override

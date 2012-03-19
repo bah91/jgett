@@ -42,5 +42,11 @@ public interface ShareInfo {
 	 * @return An {@link URL} that contains the Ge.tt service URI where this share is available
 	 */
 	public URL getUrl();	
+	
+	/**
+	 * The status of this Share on Ge.tt 
+	 * @return A {@link ReadyState} enum instance that states the status of this share (if it is deleted, for example)
+	 */
+	public ReadyState getReadyState();
 
 }

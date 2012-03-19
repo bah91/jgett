@@ -10,16 +10,27 @@ package it.atcetera.jgett;
 public enum ReadyState {
 	
 	/**
-	 * File has been declared but non uploaded yet
+	 * File or Share is ready to use
+	 */
+	READY("ready"),
+
+	/**
+	 * File or Share has been declared but non uploaded yet
 	 */
 	REMOTE("remote"),
+
 	/**
-	 * File is currently uploading
+	 * File or Share has been removed
+	 */
+	REMOVED("removed"),
+
+	/**
+	 * File or Share is currently uploading
 	 */
 	UPLOADING("uploading"),
 	
 	/**
-	 * File has been uploaded
+	 * File or Share has been uploaded
 	 */
 	UPLOADED("uploaded");
 	

@@ -78,6 +78,7 @@ public class JGettClientTest {
 		try{
 			si = client.createShare("The Test");
 			Assert.assertEquals(si.getTitle(), "The Test", "Something went wrong with share creation. The share title is mismatching!");
+			System.out.println(si);
 		}catch(Exception e){
 			Assert.fail("Unable to create a new Ge.tt share", e);
 			return;
@@ -110,6 +111,35 @@ public class JGettClientTest {
 		}catch(ShareNotFoundException e){
 			// This is ok, since the share does not exists
 		}
+		
+		// Test destroy share
+		try{
+			client.destroyShare(si.getShareName());
+		}catch(Exception e){
+			Assert.fail("Unable to destroy a Ge.tt share associated to an user", e);
+			return;
+		}
+		
+		// If the share is destroyed
+		try{
+			ShareInfo sdi = client.getShare(si.getShareName());
+			Assert.assertEquals(sdi.getReadyState(), ReadyState.REMOVED);
+			System.out.println(sdi);
+		}catch(IOException e){
+			Assert.fail("Failed to retrieve a Ge.tt share that has been deleted", e);
+			return;
+		}catch(ShareNotFoundException e){
+			// This is ok, since the share does not exists
+		}
+
+		// Test destroy already destroyed share
+		try{
+			client.destroyShare(si.getShareName());
+		}catch(Exception e){
+			Assert.fail("It is safe to delete an already deleted share", e);
+			return;
+		}
+
 	}
 	
 }
