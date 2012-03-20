@@ -102,6 +102,18 @@ public class JGettClientTest {
 			return;
 		}
 		
+		// Update a share
+		try{
+			ShareInfo ssi = client.getShare(si.getShareName());
+			client.updateShare(ssi.getShareName(), "Updated Share");
+			ssi = client.getShare(ssi.getShareName());
+			Assert.assertEquals(ssi.getTitle(), "Updated Share", "Unable to update a Ge.tt Share");
+		}catch(Exception e){
+			Assert.fail("Unable to retrieve a Ge.tt share associated to an user", e);
+			return;
+		}
+		
+		
 		// Retrieve a wrong single share
 		try{
 			client.getShare("ndknvdlvnd");
@@ -125,11 +137,9 @@ public class JGettClientTest {
 			ShareInfo sdi = client.getShare(si.getShareName());
 			Assert.assertEquals(sdi.getReadyState(), ReadyState.REMOVED);
 			System.out.println(sdi);
-		}catch(IOException e){
+		}catch(Exception e){
 			Assert.fail("Failed to retrieve a Ge.tt share that has been deleted", e);
 			return;
-		}catch(ShareNotFoundException e){
-			// This is ok, since the share does not exists
 		}
 
 		// Test destroy already destroyed share

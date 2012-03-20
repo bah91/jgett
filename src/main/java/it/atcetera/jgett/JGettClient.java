@@ -93,6 +93,11 @@ public class JGettClient {
 	private static final String GETT_DESTROY_SHARE_URL = "/1/shares/{sharename}/destroy";
 
 	/**
+	 * Ge.tt API Update share URL
+	 */
+	private static final String GETT_UPDATE_SHARE_URL = "/1/shares/{sharename}/update";
+
+	/**
 	 * Access token obtained after authentication
 	 */
 	private String accessToken;
@@ -572,6 +577,42 @@ public class JGettClient {
 		
 		Type shareCollectionType = new TypeToken<List<ShareInfoImpl>>(){}.getType();
 		return this.gson.fromJson(body, shareCollectionType);
+	}
+	
+	/**
+	 * Update a Ge.tt Share owned by this user (and its relative files)
+	 * 
+	 * @param shareName A {@link String} that contains the share name that had to be updated
+	 * @param newTitle A {@link String} that contains the new title for this share. <code>null</code> can be used and it removes the share title
+	 * @throws IOException In case of generic IO Error on HTTP communication
+	 * @throws ShareNotFoundException If the share does not exists into Ge.tt system
+	 */
+	public ShareInfo updateShare(String shareName, String newTitle) throws IOException, ShareNotFoundException{
+		if (!this.checkPreconditions()){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
+		}
+		if (shareName == null){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. The name of the share must be defined.");
+		}
+		// Check if this share exists
+		this.getShare(shareName);
+
+		String updateShareURL = JGettClient.GETT_BASE_URL + JGettClient.GETT_UPDATE_SHARE_URL.replace("{sharename}", shareName);
+		HashMap<String, String> parameters = new HashMap<String, String>();
+		parameters.put("accesstoken", this.accessToken);
+		String body = "";
+		HashMap<String, String> bodyMap = new HashMap<String, String>();
+		bodyMap.put("title", newTitle);
+		body = this.gson.toJson(bodyMap);
+		String response = this.makePostRequest(updateShareURL, body, parameters);
+		if (response == null){
+			String message = MessageFormat.format("Unable to retrieve share update confirmation using access token [{0}].", this.accessToken);
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IOException(message);
+		}
+		return this.getShare(shareName);
 	}
 	
 	/**
