@@ -1,5 +1,6 @@
 package it.atcetera.jgett;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -13,6 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import net.sf.jmimemagic.Magic;
+import net.sf.jmimemagic.MagicException;
+import net.sf.jmimemagic.MagicMatch;
+import net.sf.jmimemagic.MagicMatchNotFoundException;
+import net.sf.jmimemagic.MagicParseException;
+
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.apache.http.HttpResponse;
@@ -23,7 +30,9 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
@@ -91,11 +100,16 @@ public class JGettClient {
 	 * Ge.tt API Destroy share URL
 	 */
 	private static final String GETT_DESTROY_SHARE_URL = "/1/shares/{sharename}/destroy";
-
+	
 	/**
 	 * Ge.tt API Update share URL
 	 */
 	private static final String GETT_UPDATE_SHARE_URL = "/1/shares/{sharename}/update";
+
+	/**
+	 * Ge.tt API Create file URL
+	 */
+	private static final String GETT_CREATE_FILE_URL = "/1/files/{sharename}/create";
 
 	/**
 	 * Access token obtained after authentication
@@ -350,6 +364,48 @@ public class JGettClient {
 		return responseBody;
 	}
 	
+	/**
+	 * Upload a file to the server thru HTTP 1.1 PUT request
+	 * 
+	 * @param file A {@link File} instance that represents the file that had to be uploaded
+	 * @param url A {@link String} that represent the URL where to upload the file
+	 * @param mimeType A {@link String} with the file MIME type. This can be <code>null</code>, in this case the <i>binary/octet-stream</i> will be used as MIME type
+	 * @throws ClientProtocolException When there is a protocol mismatch on HTTP
+	 * @throws IOException In case of generic error
+	 */
+	private void putUpload(File file, String url, String mimeType) throws ClientProtocolException, IOException{
+		if (mimeType == null){
+			mimeType = "binary/octet-stream";
+		}
+		HttpClient c = this.getHttpClient();
+		HttpPut put = new HttpPut(url);
+		if (logger.isDebugEnabled()){
+			logger.debug("Make a PUT call to URL [{}]", url);
+		}
+		FileEntity fe = new FileEntity(file, mimeType);
+		put.setEntity(fe);
+		HttpResponse response = c.execute(put);
+		if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK){
+			String message = MessageFormat.format("Unable to upload the file [{0}] to the URL [{1}]. The server response with status code [{1}]", 
+					file.getName(),
+					url, 
+					response.getStatusLine().getStatusCode());
+			if (logger.isWarnEnabled()){
+				logger.warn(message);
+			}
+			// Deallocate connection
+			EntityUtils.consume(response.getEntity());
+		}
+		String responseBody = EntityUtils.toString(response.getEntity());
+		if (logger.isDebugEnabled()){
+			logger.debug("Obtained response body: [{}]", responseBody);
+		}
+		
+		// Deallocate connection
+		EntityUtils.consume(response.getEntity());
+		
+	}
+	
 	private UserInfo reAuthenticateUser() throws IOException, AuthenticationException{
 		if (!this.isAuthenticated()){
 			String message = "Unable to reauth a user that is not yet authenticated.";
@@ -402,6 +458,20 @@ public class JGettClient {
 			p.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
 		}
 		return "?" + URLEncodedUtils.format(p, "utf-8");
+	}
+	
+	/**
+	 * Return the mime type of a File
+	 * @param file A {@link File} instance that contains the file that has to be checked
+	 * @return A {@link String} with its mime type
+	 * @throws MagicParseException In case the parser it is unable to istantiate itself
+	 * @throws MagicMatchNotFoundException In case it is not possible to determine the Mime Type
+	 * @throws MagicException A general error with the library
+	 */
+	private String getFileMimeType(File file) throws MagicParseException,
+			MagicMatchNotFoundException, MagicException {
+		MagicMatch match = Magic.getMagicMatch(file, true);
+		return match.getMimeType();
 	}
 	
 	/**
@@ -582,22 +652,22 @@ public class JGettClient {
 	/**
 	 * Update a Ge.tt Share owned by this user (and its relative files)
 	 * 
-	 * @param shareName A {@link String} that contains the share name that had to be updated
+	 * @param share A {@link ShareInfo} instance that contains the share that had to be updated
 	 * @param newTitle A {@link String} that contains the new title for this share. <code>null</code> can be used and it removes the share title
 	 * @throws IOException In case of generic IO Error on HTTP communication
 	 * @throws ShareNotFoundException If the share does not exists into Ge.tt system
 	 */
-	public ShareInfo updateShare(String shareName, String newTitle) throws IOException, ShareNotFoundException{
+	public ShareInfo updateShare(ShareInfo share, String newTitle) throws IOException, ShareNotFoundException{
 		if (!this.checkPreconditions()){
 			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
 		}
-		if (shareName == null){
-			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. The name of the share must be defined.");
+		if (share == null){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. The share must be defined.");
 		}
 		// Check if this share exists
-		this.getShare(shareName);
+		this.getShare(share.getShareName());
 
-		String updateShareURL = JGettClient.GETT_BASE_URL + JGettClient.GETT_UPDATE_SHARE_URL.replace("{sharename}", shareName);
+		String updateShareURL = JGettClient.GETT_BASE_URL + JGettClient.GETT_UPDATE_SHARE_URL.replace("{sharename}", share.getShareName());
 		HashMap<String, String> parameters = new HashMap<String, String>();
 		parameters.put("accesstoken", this.accessToken);
 		String body = "";
@@ -612,7 +682,63 @@ public class JGettClient {
 			}
 			throw new IOException(message);
 		}
-		return this.getShare(shareName);
+		return this.getShare(share.getShareName());
+	}
+	
+	public FileInfo uploadFile(File file, ShareInfo share, String remoteFileName) 
+			throws IOException, IllegalArgumentException {
+		if (!this.checkPreconditions()){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
+		}
+		// Check if a share has been specified, if not, create an anonymous new one
+		if (share == null){
+			share = this.createShare(null);
+		}
+		// Check if a remote file name has been set, if not, use the real filename
+		if (remoteFileName == null){
+			remoteFileName = file.getName();
+		}
+		// Check if the share has been deleted
+		if (share.getReadyState() == ReadyState.REMOVED){
+			String message = MessageFormat.format("Unable to uoload file to the share [{0}] because it has been deleted", share.getShareName());
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IllegalArgumentException(message);
+		}
+		// Detect file mime type
+		String mimeType = null;
+		try {
+			mimeType = this.getFileMimeType(file);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled()){
+				logger.warn("Unable to get the mime type for file [{}], system reported: [{}]", file.getName(), e.getMessage());
+			}
+		}
+		
+		// Now we are ready to upload
+		String createFileURL = JGettClient.GETT_BASE_URL + JGettClient.GETT_CREATE_FILE_URL.replace("{sharename}", share.getShareName());
+		HashMap<String, String> parameters = new HashMap<String, String>();
+		parameters.put("accesstoken", this.accessToken);
+		String body = "";
+		HashMap<String, String> bodyMap = new HashMap<String, String>();
+		bodyMap.put("filename", remoteFileName);
+		body = this.gson.toJson(bodyMap);
+		String response = this.makePostRequest(createFileURL, body, parameters);
+		if (response == null){
+			String message = MessageFormat.format("Unable to retrieve file information that has been created using access token [{0}].", this.accessToken);
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IOException(message);
+		}
+		FileInfoImpl fi = this.gson.fromJson(response, FileInfoImpl.class);	
+		// Now we upload the file
+		this.putUpload(file, fi.getUploadUrl().toString(), mimeType);
+		// Adjusting file info structure
+		fi.setReadyState(ReadyState.UPLOADED);
+		fi.setShare(share);
+		return fi;
 	}
 	
 	/**
@@ -958,42 +1084,55 @@ class FileInfoImpl implements FileInfo{
 	/**
 	 * The name of the file
 	 */
+	@SerializedName("filename")
 	private String fileName;
 	
 	/**
 	 * File Unique identifier
 	 */
+	@SerializedName("fileid")
 	private String fileId;
 	
 	/**
 	 * Download URL for this file
 	 */
+	@SerializedName("getturl")
 	private URL url;
 	
 	/**
 	 * Upload URL for this file
 	 */
-	private URL uploadUrl;
+	@SerializedName("upload")
+	private Map<String, URL> uploadUrls;
 	
 	/**
 	 * How many times this file has been downloaded
 	 */
+	@SerializedName("downloads")
 	private int numberOfDownloads;
 	
 	/**
 	 * Status of this file
 	 */
+	@SerializedName("readystate")
 	private ReadyState readyState;
 	
 	/**
 	 * Date when this file has been created
 	 */
+	@SerializedName("created")
 	private Date creationDate;
 	
 	/**
 	 * Share which this file belong to
 	 */
-	private ShareInfoImpl share;
+	private ShareInfo share;
+	
+	/**
+	 * The name of the share which this file belongs to
+	 */
+	@SerializedName("sharename")
+	private String shareName;
 
 	@Override
 	public String getFileName() {
@@ -1035,7 +1174,7 @@ class FileInfoImpl implements FileInfo{
 	 * @return An {@link URL} that contains the Ge.tt upload URL for this file
 	 */
 	public URL getUploadUrl() {
-		return uploadUrl;
+		return this.uploadUrls.get("puturl");
 	}
 
 	/**
@@ -1063,11 +1202,11 @@ class FileInfoImpl implements FileInfo{
 	}
 
 	/**
-	 * Set the URL where this file can be uploaded into Ge.tt system thru PUT request
-	 * @param uploadUrl An {@link URL} where this file can be uploaded thru PUT
+	 * Set the URLs where this file can be uploaded into Ge.tt system
+	 * @param uploadUrls A {@link Map} of {@link String} and {@link URL} where to upload the Ge.tt file data
 	 */
-	public void setUploadUrl(URL uploadUrl) {
-		this.uploadUrl = uploadUrl;
+	public void setUploadUrls(Map<String, URL> uploadUrl) {
+		this.uploadUrls = uploadUrl;
 	}
 
 	/**
@@ -1096,10 +1235,26 @@ class FileInfoImpl implements FileInfo{
 
 	/**
 	 * Set the {@link ShareInfoImpl} which this file belongs to
-	 * @param share A {@link ShareInfoImpl} instance that states the share which this file belongs to
+	 * @param share A {@link ShareInfo} instance that states the share which this file belongs to
 	 */
-	public void setShare(ShareInfoImpl share) {
+	public void setShare(ShareInfo share) {
 		this.share = share;
+	}
+	
+	/**
+	 * Get the name of the Ge.tt share which this file belongs to
+	 * @return A {@link String} that contains the share name which this file belongs to
+	 */
+	public String getShareName() {
+		return shareName;
+	}
+
+	/**
+	 * Set the name of the Ge.tt share which this file belongs to
+	 * @param shareName A {@link String} that contains the share name which this file belongs to
+	 */
+	public void setShareName(String shareName) {
+		this.shareName = shareName;
 	}
 
 	@Override

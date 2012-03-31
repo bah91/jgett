@@ -1,6 +1,8 @@
 package it.atcetera.jgett;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import org.testng.Assert;
@@ -105,7 +107,7 @@ public class JGettClientTest {
 		// Update a share
 		try{
 			ShareInfo ssi = client.getShare(si.getShareName());
-			client.updateShare(ssi.getShareName(), "Updated Share");
+			client.updateShare(ssi, "Updated Share");
 			ssi = client.getShare(ssi.getShareName());
 			Assert.assertEquals(ssi.getTitle(), "Updated Share", "Unable to update a Ge.tt Share");
 		}catch(Exception e){
@@ -150,6 +152,18 @@ public class JGettClientTest {
 			return;
 		}
 
+	}
+	
+	@Test(dependsOnGroups = { "share" }, groups = { "file" })
+	public void testFiles() throws URISyntaxException{
+		File file = new File(this.getClass().getResource("/atcetera_logo_mail.png").toURI());
+		System.out.println(file);
+		try {
+			FileInfo fi = client.uploadFile(file, null, null);
+			System.out.println(fi);
+		} catch (Exception e) {
+			Assert.fail("Unable to create file", e);
+		} 
 	}
 	
 }
