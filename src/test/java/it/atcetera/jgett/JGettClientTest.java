@@ -157,9 +157,8 @@ public class JGettClientTest {
 	@Test(dependsOnGroups = { "share" }, groups = { "file" })
 	public void testFiles() throws URISyntaxException{
 		File file = new File(this.getClass().getResource("/atcetera_logo_mail.png").toURI());
-		System.out.println(file);
 		try {
-			FileInfo fi = client.uploadFile(file, null, null);
+			FileInfo fi = client.uploadFile(file);
 			System.out.println(fi);
 		} catch (Exception e) {
 			Assert.fail("Unable to create file", e);

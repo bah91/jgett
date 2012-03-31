@@ -685,6 +685,48 @@ public class JGettClient {
 		return this.getShare(share.getShareName());
 	}
 	
+
+	
+	/**
+	 * Upload a file to Ge.tt Storage System
+	 * @param file A {@link File} instance that represents the file to upload
+	 * @return A {@link FileInfo} structure thst represents the uploaded file
+	 * @throws IOException In case of generic IO Error on HTTP communication
+	 * @throws IllegalArgumentException If an invalid {@link ShareInfo} structure will be used to upload this file
+	 */
+	public FileInfo uploadFile(File file) 
+			throws IOException, IllegalArgumentException {
+		return this.uploadFile(file, null, null);
+	}	
+
+	/**
+	 * Upload a file to Ge.tt Storage System
+	 * @param file A {@link File} instance that represents the file to upload
+	 * @param remoteFileName A {@link String} that represents the name of the file when it is uploaded to the Ge.tt System. <br />
+	 * It can be <code>null</code>, in this case the name will be the same of the local file
+	 * @return A {@link FileInfo} structure thst represents the uploaded file
+	 * @throws IOException In case of generic IO Error on HTTP communication
+	 * @throws IllegalArgumentException If an invalid {@link ShareInfo} structure will be used to upload this file
+	 */
+	public FileInfo uploadFile(File file, String remoteFileName) 
+			throws IOException, IllegalArgumentException {
+		return this.uploadFile(file, null, remoteFileName);
+	}	
+
+	/**
+	 * Upload a file to Ge.tt Storage System
+	 * @param file A {@link File} instance that represents the file to upload
+	 * @param share A {@link ShareInfo} instance that represents the share where to upload this file. <br />
+	 * It can be <code>null</code>, in this case an anomymous share will be created to host this file
+	 * @return A {@link FileInfo} structure thst represents the uploaded file
+	 * @throws IOException In case of generic IO Error on HTTP communication
+	 * @throws IllegalArgumentException If an invalid {@link ShareInfo} structure will be used to upload this file
+	 */
+	public FileInfo uploadFile(File file, ShareInfo share) 
+			throws IOException, IllegalArgumentException {
+		return this.uploadFile(file, share, null);
+	}	
+	
 	/**
 	 * Upload a file to Ge.tt Storage System
 	 * @param file A {@link File} instance that represents the file to upload
