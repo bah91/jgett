@@ -128,7 +128,7 @@ public class JGettClientTest {
 		
 		// Test destroy share
 		try{
-			client.destroyShare(si.getShareName());
+			client.destroyShare(si);
 		}catch(Exception e){
 			Assert.fail("Unable to destroy a Ge.tt share associated to an user", e);
 			return;
@@ -146,7 +146,7 @@ public class JGettClientTest {
 
 		// Test destroy already destroyed share
 		try{
-			client.destroyShare(si.getShareName());
+			client.destroyShare(si);
 		}catch(Exception e){
 			Assert.fail("It is safe to delete an already deleted share", e);
 			return;
@@ -158,8 +158,11 @@ public class JGettClientTest {
 	public void testFiles() throws URISyntaxException{
 		File file = new File(this.getClass().getResource("/atcetera_logo_mail.png").toURI());
 		try {
-			FileInfo fi = client.uploadFile(file);
-			System.out.println(fi);
+			ShareInfo si = client.createShare("File test");
+			FileInfo fi = client.uploadFile(file, si);
+			Assert.assertEquals(fi.getFileName(), "atcetera_logo_mail.png", "File upload test failed");
+			
+			client.destroyShare(si);
 		} catch (Exception e) {
 			Assert.fail("Unable to create file", e);
 		} 

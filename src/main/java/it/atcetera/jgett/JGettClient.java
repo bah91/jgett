@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.InstanceCreator;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -257,7 +258,18 @@ public class JGettClient {
 			
 		}
 		
-		// Registering custom serializer - deserializer
+		// A Custom instance creator to identify the correct clase used to instanciate a FileInfo interface
+		class GettFileInfoInstanceCreator implements InstanceCreator<FileInfo>{
+
+			@Override
+			public FileInfo createInstance(Type t) {
+				return new FileInfoImpl();
+			}
+			
+		}
+				
+		// Registering custom serializer - deserializer and instance creator
+		gsonBuilder.registerTypeAdapter(FileInfo.class, new GettFileInfoInstanceCreator());
 		gsonBuilder.registerTypeAdapter(Date.class, new GettDateSerializerDeserializer());
 		gsonBuilder.registerTypeAdapter(ReadyState.class, new GettReadyStateSerializerDeserializer());
 		return gsonBuilder.create();
@@ -564,21 +576,21 @@ public class JGettClient {
 	/**
 	 * Destroy a Ge.tt Share owned by this user (and its relative files)
 	 * 
-	 * @param shareName A {@link String} that contains the share name that had to be destroyed
+	 * @param sahre A {@link ShareInfo} instance that contains the share name that had to be destroyed
 	 * @throws IOException In case of generic IO Error on HTTP communication
 	 * @throws ShareNotFoundException If the share does not exists into Ge.tt system
 	 */
-	public void destroyShare(String shareName) throws IOException, ShareNotFoundException{
+	public void destroyShare(ShareInfo share) throws IOException, ShareNotFoundException{
 		if (!this.checkPreconditions()){
 			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
 		}
-		if (shareName == null){
+		if (share == null){
 			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. The name of the share must be defined.");
 		}
 		// Check if this share exists
-		this.getShare(shareName);
+		this.getShare(share.getShareName());
 
-		String destroyShareURL = JGettClient.GETT_BASE_URL + JGettClient.GETT_DESTROY_SHARE_URL.replace("{sharename}", shareName);
+		String destroyShareURL = JGettClient.GETT_BASE_URL + JGettClient.GETT_DESTROY_SHARE_URL.replace("{sharename}", share.getShareName());
 		HashMap<String, String> parameters = new HashMap<String, String>();
 		parameters.put("accesstoken", this.accessToken);
 		String body = "";
@@ -790,7 +802,15 @@ public class JGettClient {
 		this.putUpload(file, fi.getUploadUrl().toString(), mimeType);
 		// Adjusting file info structure
 		fi.setReadyState(ReadyState.UPLOADED);
-		fi.setShare(share);
+		try {
+			fi.setShare(this.getShare(share.getShareName()));
+		} catch (ShareNotFoundException e) {
+			String message = MessageFormat.format("Unable to find the share named [{0}], which is virtually impossible at this state", share.getShareName());
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IllegalStateException(message);
+		}
 		return fi;
 	}
 	
@@ -1315,6 +1335,13 @@ class FileInfoImpl implements FileInfo{
 		return ReflectionToStringBuilder.toString(this, ToStringStyle.SHORT_PREFIX_STYLE);
 	}
 	
+	/**
+	 * Default constructor
+	 */
+	public FileInfoImpl(){
+		super();
+	}
+	
 }
 
 class ShareInfoImpl implements ShareInfo{
@@ -1341,7 +1368,7 @@ class ShareInfoImpl implements ShareInfo{
 	 * List of files that belongs to this share
 	 */
 	@SerializedName("files")
-	private List<? extends FileInfo> files;
+	private List<FileInfo> files;
 	
 	@SerializedName("readystate")
 	private ReadyState readyState;
@@ -1368,9 +1395,8 @@ class ShareInfoImpl implements ShareInfo{
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public List<FileInfo> getFiles() {
-		return (List<FileInfo>) this.files;
+		return this.files;
 	}
 
 	/**
@@ -1401,7 +1427,7 @@ class ShareInfoImpl implements ShareInfo{
 	 * Set the files that belogns to this share
 	 * @param files A {@link List} of {@link FileInfo} that contains the files that belongs to this share
 	 */
-	public void setFiles(List<FileInfoImpl> files) {
+	public void setFiles(List<FileInfo> files) {
 		this.files = files;
 	}
 	
