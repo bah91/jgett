@@ -162,9 +162,14 @@ public class JGettClientTest {
 			FileInfo fi = client.uploadFile(file, si);
 			Assert.assertEquals(fi.getFileName(), "atcetera_logo_mail.png", "File upload test failed");
 			
+			// Retrieve the File data again
+			fi = client.getFile(si, fi.getFileId());
+			Assert.assertNotNull(fi, "Unable to retrieve file metadata");
+			Assert.assertEquals(fi.getFileName(), "atcetera_logo_mail.png", "File retrieve test failed");
+			
 			client.destroyShare(si);
 		} catch (Exception e) {
-			Assert.fail("Unable to create file", e);
+			Assert.fail("File operation test failed", e);
 		} 
 	}
 	

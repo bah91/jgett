@@ -111,6 +111,11 @@ public class JGettClient {
 	 * Ge.tt API Create file URL
 	 */
 	private static final String GETT_CREATE_FILE_URL = "/1/files/{sharename}/create";
+	
+	/**
+	 * Ge.tt API List file URL
+	 */
+	private static final String GETT_LIST_FILE_URL = "/1/files/{sharename}/{fileid}";
 
 	/**
 	 * Access token obtained after authentication
@@ -618,7 +623,7 @@ public class JGettClient {
 			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
 		}
 		if (shareName == null){
-			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. The name of the share must be defined.");
+			throw new IllegalArgumentException("Unable to perform the request to Ge.tt service. The name of the share must be defined.");
 		}
 		StringBuilder shareUrl = new StringBuilder();
 		shareUrl.append(JGettClient.GETT_BASE_URL);
@@ -633,6 +638,56 @@ public class JGettClient {
 		}
 		
 		return this.gson.fromJson(body, ShareInfoImpl.class);
+	}
+	
+	/**
+	 * Get a Ge.tt File associated to a Share
+	 * 
+	 * @param share A {@link ShareInfo} instance where to search the file
+	 * @param fileId A {@link String} that represents the file unique id
+	 * @return A {@link FileInfo} instance that represents the file that meets the requirements
+	 * @throws IOException In case of generic IO Error on HTTP communication
+	 * @throws ShareNotFoundException If the share does not exists into Ge.tt system
+	 * @throws FileNotFoundException If the file does not exists into the Ge.tt system
+	 */
+	public FileInfo getFile(ShareInfo share, String fileId) throws IOException,
+			ShareNotFoundException,	FileNotFoundException {
+		if (!this.checkPreconditions()){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
+		}
+		if (share == null){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. The name of the share must be defined.");
+		}
+		// Check if this share exists
+		share = this.getShare(share.getShareName());
+		boolean fileFound = false;
+		for (FileInfo f : share.getFiles()){
+			if (f.getFileId().equalsIgnoreCase(fileId)){
+				fileFound = true;
+			}
+		}
+		if (!fileFound){
+			String message = MessageFormat.format("Unable to find the file with id [{0}] into the share [{1}]", fileId, share.getShareName());
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new FileNotFoundException(message);
+		}
+		// File Exists, get file data
+		StringBuilder fileUrl = new StringBuilder();
+		fileUrl.append(JGettClient.GETT_BASE_URL);
+		fileUrl.append(JGettClient.GETT_LIST_FILE_URL.replace("{sharename}", share.getShareName()).replace("{fileid}", fileId));
+		
+		HashMap<String, String> parameters = new HashMap<String, String>();
+		String body = this.makeGetRequest(fileUrl.toString(), parameters);
+		if (body == null){
+			String message = MessageFormat.format("Unable to find the file with id [{0}] into the share [{1}]", fileId, share.getShareName());
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new FileNotFoundException(message);
+		}
+		return this.gson.fromJson(body, FileInfoImpl.class);
 	}
 	
 	/**
@@ -748,13 +803,29 @@ public class JGettClient {
 	 * It can be <code>null</code>, in this case the name will be the same of the local file
 	 * @return A {@link FileInfo} structure thst represents the uploaded file
 	 * @throws IOException In case of generic IO Error on HTTP communication
-	 * @throws IllegalArgumentException If an invalid {@link ShareInfo} structure will be used to upload this file
+	 * @throws IllegalArgumentException If an invalid {@link ShareInfo} structure will be used to upload this file or if it is not enough space for this file to upload
 	 */
 	public FileInfo uploadFile(File file, ShareInfo share, String remoteFileName) 
 			throws IOException, IllegalArgumentException {
 		if (!this.checkPreconditions()){
 			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
 		}
+		
+		// Check if there is enough room for this file on this account
+		UserInfo me = this.getUserInformation();
+		if ((me.getStorageInfo().getLimitSpace() - me.getStorageInfo().getUsedSpace()) < file.length()){
+			String message = MessageFormat.format(
+					"Unable to upload the file [{0}], it has a size of {1,number,###,###,###,###,##0} bytes, while this Ge.tt account has {2,number,###,###,###,###,##0} bytes left", 
+					file.getName(),
+					file.length(),
+					me.getStorageInfo().getLimitSpace() - me.getStorageInfo().getUsedSpace()
+				);
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IllegalArgumentException(message);
+		}
+		
 		// Check if a share has been specified, if not, create an anonymous new one
 		if (share == null){
 			share = this.createShare(null);
@@ -1368,7 +1439,7 @@ class ShareInfoImpl implements ShareInfo{
 	 * List of files that belongs to this share
 	 */
 	@SerializedName("files")
-	private List<FileInfo> files;
+	private List<FileInfoImpl> files;
 	
 	@SerializedName("readystate")
 	private ReadyState readyState;
@@ -1396,7 +1467,11 @@ class ShareInfoImpl implements ShareInfo{
 
 	@Override
 	public List<FileInfo> getFiles() {
-		return this.files;
+		List<FileInfo> tempList = new ArrayList<FileInfo>();
+		for (FileInfo fi: this.files){
+			tempList.add(fi);
+		}
+		return tempList;
 	}
 
 	/**
@@ -1425,9 +1500,9 @@ class ShareInfoImpl implements ShareInfo{
 
 	/**
 	 * Set the files that belogns to this share
-	 * @param files A {@link List} of {@link FileInfo} that contains the files that belongs to this share
+	 * @param files A {@link List} of {@link FileInfoImpl} that contains the files that belongs to this share
 	 */
-	public void setFiles(List<FileInfo> files) {
+	public void setFiles(List<FileInfoImpl> files) {
 		this.files = files;
 	}
 	
