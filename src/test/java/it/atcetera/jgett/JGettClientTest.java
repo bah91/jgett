@@ -167,6 +167,13 @@ public class JGettClientTest {
 			Assert.assertNotNull(fi, "Unable to retrieve file metadata");
 			Assert.assertEquals(fi.getFileName(), "atcetera_logo_mail.png", "File retrieve test failed");
 			
+			client.destroyFile(fi);
+			try{
+				fi = client.getFile(si, fi.getFileId());
+				Assert.fail("Found a file that has been destroyed");
+			}catch(FileNotFoundException e){
+				// Ok, File does not exists
+			}
 			client.destroyShare(si);
 		} catch (Exception e) {
 			Assert.fail("File operation test failed", e);

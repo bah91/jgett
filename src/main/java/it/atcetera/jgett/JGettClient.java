@@ -116,6 +116,11 @@ public class JGettClient {
 	 * Ge.tt API List file URL
 	 */
 	private static final String GETT_LIST_FILE_URL = "/1/files/{sharename}/{fileid}";
+	
+	/**
+	 * Ge.tt API Destroy file URL
+	 */
+	private static final String GETT_DESTROY_FILE_URL = "/1/files/{sharename}/{fileid}/destroy";
 
 	/**
 	 * Access token obtained after authentication
@@ -590,7 +595,7 @@ public class JGettClient {
 			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
 		}
 		if (share == null){
-			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. The name of the share must be defined.");
+			throw new IllegalArgumentException("Unable to perform the request to Ge.tt service. The share must be defined.");
 		}
 		// Check if this share exists
 		this.getShare(share.getShareName());
@@ -608,6 +613,46 @@ public class JGettClient {
 			throw new IOException(message);
 		}
 		
+	}
+	
+	/**
+	 * Destroy a Ge.tt file owned by this user
+	 * 
+	 * @param file A {@link FileInfo} structure that represents the file that has to be deleted
+	 * @throws IOException In case of generic IO Error on HTTP communication
+	 * @throws FileNotFoundException If the file does not exists into the Ge.tt system
+	 */
+	public void destroyFile(FileInfo file) throws IOException, FileNotFoundException{
+		if (!this.checkPreconditions()){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
+		}
+		if (file == null){
+			throw new IllegalArgumentException("Unable to perform the request to Ge.tt service. The file must be defined.");
+		}
+		System.out.println("***************************************");
+		System.out.println(file);
+		// Check if this file exists
+		try {
+			this.getFile(file.getShare(), file.getFileId());
+		} catch (ShareNotFoundException e) {
+			String message = MessageFormat.format("Unable to find the share [{0}], associated with the file [{1}]", file.getShare().getShareName(), file.getFileId());
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new FileNotFoundException(message, e);
+		}
+		String destroyFileURL = JGettClient.GETT_BASE_URL + JGettClient.GETT_DESTROY_FILE_URL.replace("{sharename}", file.getShare().getShareName()).replace("{fileid}", file.getFileId());
+		HashMap<String, String> parameters = new HashMap<String, String>();
+		parameters.put("accesstoken", this.accessToken);
+		String body = "";
+		String response = this.makePostRequest(destroyFileURL, body, parameters);
+		if (response == null){
+			String message = MessageFormat.format("Unable to retrieve file destroy confirmation using access token [{0}].", this.accessToken);
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IOException(message);
+		}
 	}
 	
 	/**
@@ -687,7 +732,9 @@ public class JGettClient {
 			}
 			throw new FileNotFoundException(message);
 		}
-		return this.gson.fromJson(body, FileInfoImpl.class);
+		FileInfoImpl fi = this.gson.fromJson(body, FileInfoImpl.class);
+		fi.setShare(share);
+		return fi;
 	}
 	
 	/**
