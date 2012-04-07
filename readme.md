@@ -51,6 +51,16 @@ To connect to Ge.tt and authenticate a user you use this code:
 
 once your authentication is successful, you could manage your shares thru the client methods.
 
+### Obtaining user and storage information
+To obtain information about a Ge.tt account you use this code
+	
+	::java
+	UserInfo me = client..getUserInformation();
+	System.out.println("User email" + me.getEMail());
+	System.out.println("Available size: " + me.getStorageInfo().getLimitSpace());
+
+which provide a `UserInfo` instance with information about user and a `StorageInfo` instance with the information about the size used and available for this account
+
 ## Requirements
 
 JGett is built upon:
