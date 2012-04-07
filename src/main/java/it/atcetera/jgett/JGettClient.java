@@ -629,8 +629,6 @@ public class JGettClient {
 		if (file == null){
 			throw new IllegalArgumentException("Unable to perform the request to Ge.tt service. The file must be defined.");
 		}
-		System.out.println("***************************************");
-		System.out.println(file);
 		// Check if this file exists
 		try {
 			this.getFile(file.getShare(), file.getFileId());
