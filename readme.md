@@ -7,7 +7,7 @@ Thru the client class it is possible to manage, upload and download files to the
 ## Download
 This library is built with [Maven](http://maven.apache.org/) and it can be downloaded from the [Sonatype Open Source Repository](https://oss.sonatype.org/content/groups/public/).
 
-To do so you have to include this code into your POM file under the _repositories_ section:
+To do so you have to include this code into your POM file under the `repositories` section:
 
 	<repositories>
 		<repository>
@@ -21,8 +21,36 @@ To do so you have to include this code into your POM file under the _repositorie
 			</releases>
 		</repository>
 	</repositories>
+and then add to the `dependencies` section the code:
+
+       <dependency>
+			<groupId>it.atcetera</groupId>
+			<artifactId>jgett</artifactId>
+			<version>1.0</version>
+			<scope>compile</scope>
+		</dependency>
 
 If you do not use Maven you could download the latest version of JGett [here](#). If you choose to download it manually, please check the Requirement section in order to download the libraries that JGett requires.
+
+## Usage
+
+To manage, upload and download file with Ge.tt system you will use a _JGettClient_ instance.
+
+With this object you can handle all the possibilities that the [Ge.tt Rest API](http://ge.tt/developers/rest) offers.
+
+### Connection initialization and User authentication
+To connect to Ge.tt and authenticate a user you use this code:
+
+<pre><code>
+String apiKey = "yourApiKey";
+String userName = "Ge.tt username";
+String password = "Ge.tt password";
+
+JGettClient client = new JGettClient();
+client.authenticate(apiKey, userName, password);
+</code></pre>
+
+once your authentication is successful, you could manage your shares thru the client methods.
 
 ## Requirements
 
