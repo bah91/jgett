@@ -55,11 +55,34 @@ once your authentication is successful, you could manage your shares thru the cl
 To obtain information about a Ge.tt account you use this code
 	
 	::java
-	UserInfo me = client..getUserInformation();
+	UserInfo me = client.getUserInformation();
 	System.out.println("User email" + me.getEMail());
 	System.out.println("Available size: " + me.getStorageInfo().getLimitSpace());
-
+	
 which provide a `UserInfo` instance with information about user and a `StorageInfo` instance with the information about the size used and available for this account
+
+### Managing a Share
+
+A Share in Ge.tt is a collection of files.
+
+The client can create, destroy and retrieve shares. The information about a share is contained in a `ShareInfo` instance:
+
+	::java
+	ShareInfo si = client.createShare("The Test"); // Create a share named "The Test";
+	si = client.getShare("The Test"); // Search for a share named "The test"
+	List<ShareInfo> shares = client.getShares(); // Retrieve all the shares that belongs to this users
+	client.updateShare(si, "The new Test"); // Rename the share
+	client.destroyShare(si); // Delete the share "The new test" and all the files that belongs to this share
+	
+A share basically has a name and a List of files, which can be retreived to the methods:
+
+	::java
+	ShareInfo si = client.getShare("The Test");
+	si.getShareTitle();
+	si.getShareName();
+	si.getFiles();
+	si.getCreationDate();
+	si.getUrl();  // The URL on the Ge.tt System used to download the file
 
 ## Requirements
 
