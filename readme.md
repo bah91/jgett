@@ -74,7 +74,7 @@ The client can create, destroy and retrieve shares. The information about a shar
 	client.updateShare(si, "The new Test"); // Rename the share
 	client.destroyShare(si); // Delete the share "The new test" and all the files that belongs to this share
 	
-A share basically has a name and a List of files, which can be retreived to the methods:
+A share basically has a set of information, which can be retrieved with these methods:
 
 	::java
 	ShareInfo si = client.getShare("The Test");
@@ -82,7 +82,31 @@ A share basically has a name and a List of files, which can be retreived to the 
 	si.getShareName();
 	si.getFiles();
 	si.getCreationDate();
-	si.getUrl();  // The URL on the Ge.tt System used to download the file
+	si.getUrl();  // The URL on the Ge.tt System used to display the share
+	
+### Managing files
+
+The client can upload, download and remove a file from a share. The information about a file is contained in a `FileInfo` instance:
+
+	::java
+	File file = new File();
+	FileInfo fi = client.uploadFile(file);					// Overloaded method that creates an anonymous share and upload the file to it
+	byte[] data = client.getFileData();						// Retrieve file from Ge.tt system
+	fi = client.getFile(fi.getShare(), fi.getFileId());		// Search for a specific file into Ge.tt system
+	client.destroyFile(fi);									// Delete the selected file
+	
+A file also has a set of information, which can be retrieved with these methods:
+
+	::java
+	FileInfo fi = client.getFile(client.getShare("Test"), "0");
+	fi.getFileName();
+	fi.getFileId();
+	fi.getNumberOfDownloads();
+	fi.getShare();
+	fi.getCreationDate();
+	fi.getUrl(); // The URL on the Ge.tt System used to download the file thru Ge.tt web interface
+	
+
 
 ## Requirements
 
