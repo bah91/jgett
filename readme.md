@@ -106,8 +106,6 @@ A file also has a set of information, which can be retrieved with these methods:
 	fi.getCreationDate();
 	fi.getUrl(); // The URL on the Ge.tt System used to download the file thru Ge.tt web interface
 	
-
-
 ## Requirements
 
 JGett is built upon:
@@ -120,3 +118,7 @@ JGett is built upon:
   
 All this dependencies are handled by [Maven](http://maven.apache.org/) by default. 
 If you want to use JGett without Maven support, please download this libraries manually.
+
+## License
+
+JGett is distributed under the [LGPL v.3.0](http://www.gnu.org/copyleft/lesser.html) license. 
