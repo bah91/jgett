@@ -196,7 +196,7 @@ public class JGettClient {
 				if (logger.isDebugEnabled()){
 					logger.debug("Library version used as http user-agent: [{}]", sb.toString());
 				}
-				this.httpClient.getParams().setParameter("http.useragent", sb.toString());
+				this.httpClient.getParams().setParameter("http.useragent", "Mozilla/5.0 (compatible) " + sb.toString());
 			} catch (IOException e) {
 				if (logger.isWarnEnabled()){
 					logger.warn("Unable to get library version information. Version will be not set into http requests.");
