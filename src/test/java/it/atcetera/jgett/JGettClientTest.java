@@ -167,6 +167,10 @@ public class JGettClientTest {
 			Assert.assertNotNull(fi, "Unable to retrieve file metadata");
 			Assert.assertEquals(fi.getFileName(), "atcetera_logo_mail.png", "File retrieve test failed");
 			
+			// Retrieve file content
+			byte[] data = client.getFileData(fi);
+			Assert.assertTrue(data.length > 0, "Unable to download file content");
+			
 			client.destroyFile(fi);
 			try{
 				fi = client.getFile(si, fi.getFileId());

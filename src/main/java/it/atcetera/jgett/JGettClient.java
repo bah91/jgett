@@ -121,6 +121,11 @@ public class JGettClient {
 	 * Ge.tt API Destroy file URL
 	 */
 	private static final String GETT_DESTROY_FILE_URL = "/1/files/{sharename}/{fileid}/destroy";
+	
+	/**
+	 * Ge.tt API Blob file URL
+	 */
+	private static final String GETT_DATA_FILE_URL = "/1/files/{sharename}/{fileid}/blob";
 
 	/**
 	 * Access token obtained after authentication
@@ -328,6 +333,49 @@ public class JGettClient {
 		return responseBody;
 	}	
 	
+	/**
+	 * Make a GET HTTP 1.1 request to an HTTP Server and returns data as raw data
+	 * 
+	 * @param url A {@link String} containing the URL where to post data
+	 * @param params A {@link Map} of name - value parameters that will be encoded into the post string as GET parameters. 
+	 * It can be <code>null</code> if no parameters are necessary
+	 * @return An array of byte containing the response body or <code>null</code> if HTTP response != 200
+	 * @throws ClientProtocolException When there is a protocol mismatch on HTTP
+	 * @throws IOException In case of generic error
+	 */
+	private byte[] makeGetRequestForDownload(String url, Map<String, String> params) throws ClientProtocolException, IOException{
+		HttpClient c = this.getHttpClient();
+		if (params != null){
+			url = url + this.toQueryString(params);
+		}
+		HttpGet get = new HttpGet(url);
+		if (logger.isDebugEnabled()){
+			logger.debug("Make a GET call to URL [{}]", url);
+		}
+
+		HttpResponse response = c.execute(get);
+		if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK){
+			String message = MessageFormat.format("Unable to obtain the result from URL [{0}]. The server response with status code [{1}]", 
+					url,  
+					response.getStatusLine().getStatusCode());
+			if (logger.isWarnEnabled()){
+				logger.warn(message);
+			}
+			// Deallocate connection
+			EntityUtils.consume(response.getEntity());
+			return null;
+		}
+		byte[] responseBody = EntityUtils.toByteArray(response.getEntity());
+		if (logger.isDebugEnabled()){
+			logger.debug("Obtained response body: [{}]", responseBody);
+		}
+		
+		// Deallocate connection
+		EntityUtils.consume(response.getEntity());
+
+		return responseBody;
+	}	
+
 	/**
 	 * Make a POST HTTP 1.1 request to an HTTP Server
 	 * 
@@ -651,6 +699,45 @@ public class JGettClient {
 			}
 			throw new IOException(message);
 		}
+	}
+	
+	/**
+	 * Retrieve the file binary data stored into Ge.tt system
+	 * 
+	 * @param file A {@link FileInfo} structure tht represent the file to download
+	 * @return An array of byte that contains the requested file binary data
+	 * @throws IOException In case of generic IO Error on HTTP communication
+	 * @throws FileNotFoundException If the file does not exists into the Ge.tt system
+	 */
+	public byte[] getFileData(FileInfo file) throws IOException, FileNotFoundException{
+		if (!this.checkPreconditions()){
+			throw new IllegalAccessError("Unable to perform the request to Ge.tt service. Check if the user is correctly authenticated.");
+		}
+		if (file == null){
+			throw new IllegalArgumentException("Unable to perform the request to Ge.tt service. The file must be defined.");
+		}
+		// Check if this file exists
+		try {
+			this.getFile(file.getShare(), file.getFileId());
+		} catch (ShareNotFoundException e) {
+			String message = MessageFormat.format("Unable to find the share [{0}], associated with the file [{1}]", file.getShare().getShareName(), file.getFileId());
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new FileNotFoundException(message, e);
+		}
+		String blobFileUrl = JGettClient.GETT_BASE_URL + JGettClient.GETT_DATA_FILE_URL.replace("{sharename}", file.getShare().getShareName()).replace("{fileid}", file.getFileId());
+		HashMap<String, String> parameters = new HashMap<String, String>();
+		parameters.put("accesstoken", this.accessToken);
+		byte[] response = this.makeGetRequestForDownload(blobFileUrl, parameters);
+		if (response == null){
+			String message = MessageFormat.format("Unable to retrieve file data using access token [{0}].", this.accessToken);
+			if (logger.isErrorEnabled()){
+				logger.error(message);
+			}
+			throw new IOException(message);
+		}
+		return response;
 	}
 	
 	/**
