@@ -9,7 +9,6 @@ This library is built with [Maven](http://maven.apache.org/) and it can be downl
 
 To do so you have to include this code into your POM file under the _repositories_ section:
 
-<pre><code>
 	<repositories>
 		<repository>
 			<id>Codehaus Snapshots</id>
@@ -22,7 +21,6 @@ To do so you have to include this code into your POM file under the _repositorie
 			</releases>
 		</repository>
 	</repositories>
-</code></pre>
 
 If you do not use Maven you could download the latest version of JGett [here](#). If you choose to download it manually, please check the Requirement section in order to download the libraries that JGett requires.
 
