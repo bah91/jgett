@@ -42,12 +42,12 @@ With this object you can handle all the possibilities that the [Ge.tt Rest API](
 To connect to Ge.tt and authenticate a user you use this code:
 
 
->String apiKey = "yourApiKey";
->String userName = "Ge.tt username";
->String password = "Ge.tt password";
->
->JGettClient client = new JGettClient();
->client.authenticate(apiKey, userName, password);
+`String apiKey = "yourApiKey";`
+`String userName = "Ge.tt username";`
+`String password = "Ge.tt password";`
+``
+`JGettClient client = new JGettClient();`
+`client.authenticate(apiKey, userName, password);`
 
 
 once your authentication is successful, you could manage your shares thru the client methods.
