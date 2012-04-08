@@ -634,7 +634,7 @@ public class JGettClient {
 	/**
 	 * Destroy a Ge.tt Share owned by this user (and its relative files)
 	 * 
-	 * @param sahre A {@link ShareInfo} instance that contains the share name that had to be destroyed
+	 * @param share A {@link ShareInfo} instance that contains the share name that had to be destroyed
 	 * @throws IOException In case of generic IO Error on HTTP communication
 	 * @throws ShareNotFoundException If the share does not exists into Ge.tt system
 	 */
