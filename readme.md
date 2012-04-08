@@ -119,6 +119,30 @@ JGett is built upon:
 All this dependencies are handled by [Maven](http://maven.apache.org/) by default. 
 If you want to use JGett without Maven support, please download this libraries manually.
 
+## Build the code
+
+The build mechanism is entirely managed by [Maven](http://maven.apache.org/).
+
+There is only a caveat to build this package. During the `test` phase, it is mandatory to use a valid Ge.tt account to test the client. 
+In order to pass to the test suite the credential you have to write a `testng.xml` file into the `src/test/resources` folder crafted in that way:
+
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+  
+	<suite name="All" verbose="1">
+		<parameter name="gettApiKey" value="Ge.tt api key" />
+		<parameter name="gettEmail" value="Ge.tt email" />
+		<parameter name="gettPassword" value="Ge.tt password" />
+		<parameter name="gettPasswordWrong" value="76" />
+		
+		<test name="All">
+			<packages>
+				<package name="it.atcetera.jgett" />
+			</packages>
+		</test>
+	</suite>
+
+This file is used by [TestNG](http://testng.org/doc/index.html) to supply the parameters to the test suite.
+
 ## License
 
 JGett is distributed under the [LGPL v.3.0](http://www.gnu.org/copyleft/lesser.html) license. 
