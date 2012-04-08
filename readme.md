@@ -11,13 +11,13 @@ To do so you have to include this code into your POM file under the `repositorie
 
 	<repositories>
 		<repository>
-			<id>Codehaus Snapshots</id>
-			<url>http://nexus.codehaus.org/snapshots/</url>
+			<id>OSS Sonatype Repository</id>
+			<url>https://oss.sonatype.org/content/groups/public/</url>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
 			<releases>
-				<enabled>false</enabled>
+				<enabled>true</enabled>
 			</releases>
 		</repository>
 	</repositories>
