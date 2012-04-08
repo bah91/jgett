@@ -12,7 +12,7 @@ To do so you have to include this code into your POM file under the `repositorie
 	<repositories>
 		<repository>
 			<id>OSS Sonatype Repository</id>
-			<url>https://oss.sonatype.org/content/groups/public/</url>
+			<url>https://oss.sonatype.org/content/repositories/releases/</url>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
