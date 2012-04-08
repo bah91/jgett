@@ -126,7 +126,7 @@ The build mechanism is entirely managed by [Maven](http://maven.apache.org/).
 There is only a caveat to build this package. During the `test` phase, it is mandatory to use a valid Ge.tt account to test the client. 
 In order to pass to the test suite the credential you have to write a `testng.xml` file into the `src/test/resources` folder crafted in that way:
 
-<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+	<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
   
 	<suite name="All" verbose="1">
 		<parameter name="gettApiKey" value="Ge.tt api key" />
