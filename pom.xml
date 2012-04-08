@@ -8,7 +8,14 @@
 	<packaging>jar</packaging>
 
 	<name>jgett</name>
-	<url>scm:hg:https://bitbucket.org/torre/jgett</url>
+	<url>http://jgett.atcetera.it</url>
+	
+	<licenses>
+		<license>
+			<name>GNU Lesser General Public License, v3.0</name>
+			<url>http://www.gnu.org/copyleft/lesser.html</url>
+		</license>
+	</licenses>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -55,6 +62,7 @@
 	<scm>
 		<url>https://bitbucket.org/torre/jgett</url>
 		<connection>scm:hg:https://bitbucket.org/torre/jgett</connection>
+		<developerConnection>scm:hg:https://bitbucket.org/torre/jgett</developerConnection>
 	</scm>
 
 	<repositories>
