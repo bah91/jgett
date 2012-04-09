@@ -65,7 +65,7 @@ public class JGettClient {
 	/**
 	 * Timeout, in millisecond, for an http request
 	 */
-	private static final int HTTP_REQUEST_TIMEOUT = 1000;
+	private static final int HTTP_REQUEST_TIMEOUT = 60000;
 	
 	/**
 	 * Logging Facility
