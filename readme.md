@@ -5,23 +5,9 @@ JGett is a Client API implementation for Ge.tt ([http://www.ge.tt](http://www.ge
 Thru the client class it is possible to manage, upload and download files to the Ge.tt system to share them into the web.
 
 ## Download
-This library is built with [Maven](http://maven.apache.org/) and it can be downloaded from the [Sonatype Open Source Repository](https://oss.sonatype.org/content/groups/public/).
+This library is built with [Maven](http://maven.apache.org/) and it can be downloaded from the [Central Maven Repository](http://search.maven.org/).
 
-To do so you have to include this code into your POM file under the `repositories` section:
-
-	<repositories>
-		<repository>
-			<id>OSS Sonatype Repository</id>
-			<url>https://oss.sonatype.org/content/repositories/releases/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>
-and then add to the `dependencies` section the code:
+To do so, you have to include a dependency into your `pom.xml`:
 
        <dependency>
 			<groupId>it.atcetera</groupId>
@@ -30,7 +16,7 @@ and then add to the `dependencies` section the code:
 			<scope>compile</scope>
 		</dependency>
 
-If you do not use Maven you could download the latest version of JGett [here](#). If you choose to download it manually, please check the Requirement section in order to download the libraries that JGett requires.
+If you do not use Maven you could download the latest version of JGett [here](http://search.maven.org/remotecontent?filepath=it/atcetera/jgett/1.0.1/jgett-1.0.1.jar). If you choose to download it manually, please check the Requirement section in order to download the libraries that JGett requires.
 
 ## Usage
 
