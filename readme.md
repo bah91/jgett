@@ -26,7 +26,7 @@ and then add to the `dependencies` section the code:
        <dependency>
 			<groupId>it.atcetera</groupId>
 			<artifactId>jgett</artifactId>
-			<version>1.0</version>
+			<version>1.0.1</version>
 			<scope>compile</scope>
 		</dependency>
 
